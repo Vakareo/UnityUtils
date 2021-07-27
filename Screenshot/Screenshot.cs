@@ -13,6 +13,7 @@ public class Screenshot : MonoBehaviour
 {
     [SerializeField] string path;
     [SerializeField, Range(1, 4)] int size = 1;
+    [SerializeField] int maxImagesWithSameName = 10;
 #if ENABLE_INPUT_SYSTEM 
     [SerializeField]
     InputAction action = new InputAction("Take Screenshot", InputActionType.Button, "<Keyboard>/F8");
@@ -35,9 +36,20 @@ public class Screenshot : MonoBehaviour
             Debug.Log($"<color=red>{path} does NOT. Could not take screenshot.</color>");
             return;
         }
-        var filePath = Path.Combine(path, $"{DateTime.Now.ToString("MMddyyyy-hhmmsstt")}-{System.Guid.NewGuid()}.png");
-        Debug.Log($"<color=green>Screenshot captured to {filePath}</color>");
-        ScreenCapture.CaptureScreenshot(filePath, size);
+
+        var imageName = $"{DateTime.Now.ToString("MMddyyyy-hhmmsstt")}_";
+        for (int i = 0; i < maxImagesWithSameName; i++)
+        {
+            var filePath = Path.Combine(path, $"{imageName}{i + 1:00}.png");
+            if (!File.Exists(filePath))
+            {
+                Debug.Log($"<color=green>Screenshot captured to {filePath}</color>");
+                ScreenCapture.CaptureScreenshot(filePath, size);
+                return;
+            }
+        }
+
+        Debug.Log($"<color=red>Could not take screenshot! ({imageName}xx.png) Already {maxImagesWithSameName} images with the same name!</color>");
     }
 
 
@@ -61,8 +73,9 @@ public class Screenshot : MonoBehaviour
 
 #else
 
-    private void Update(){
-        if(Input.GetKeyDown(key))
+    private void Update()
+    {
+        if (Input.GetKeyDown(key))
             TakeScreenshot();
     }
 
